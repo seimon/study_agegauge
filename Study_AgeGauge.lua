@@ -25,18 +25,16 @@ function _init()
 		to=10,
 		before=10,
 		current=10,
+		ratio_to=0,
 		ratio=0,
 		ratio_spd=0,
-		intv=0
+		intv=0,
 	}
-
 	handle={
 		tx_def=63,
 		tx=63,
-		cx=63
+		cx=63,
 	}
-	
-
 end
 
 function _update60()
@@ -89,9 +87,10 @@ function _draw()
 	ovalfill(x+4,y+h-2,x+w-4,y+h+14,0)
 	do
 		local cx,w0,h0,gap=x+w/2-0.5,8,16,1
-		local r_to=(age.to-age.min)/(age.max-age.min)
-		age.ratio_spd=(r_to-age.ratio)*0.05+age.ratio_spd*0.65
+		age.ratio_to=(age.to-age.min)/(age.max-age.min)
+		age.ratio_spd=(age.ratio_to-age.ratio)*0.05+age.ratio_spd*0.65
 		age.ratio+=age.ratio_spd
+		if (abs(age.ratio_spd)<0.0001) age.ratio=age.ratio_to
 
 		for i=0,age.max-age.min do
 			local x0=cx+i*(w0+gap) - age.ratio*(age.max-age.min)*(w0+gap)
@@ -135,9 +134,10 @@ function _draw()
 
 	-- test	
 	print("ratio:"..age.ratio,1,1,0)
-	print("age.to:"..age.to,1,7,0)
-	print("age.before:"..age.before,1,7+6,0)
-	print("age.current:"..age.current,1,7+12,0)
+	print("ratio.to:"..age.ratio,1,7,0)
+	print("age.to:"..age.to,1,7+6,0)
+	print("age.before:"..age.before,1,7+12,0)
+	print("age.current:"..age.current,1,7+18,0)
 
 	-- print age
 	do
@@ -152,7 +152,9 @@ function _draw()
 	
 	-- handle
 	do
-		handle.cx+=(handle.tx-handle.cx)*0.2
+		handle.cx+=(handle.tx-handle.cx)*0.25
+		if (abs(handle.tx-handle.cx)<0.5) handle.cx=handle.tx
+		
 		local hx,hy,hh=handle.cx,y-2,h+8
 		fillp(0b1010010110100101.1) rectfill(hx+2,hy+1,hx+4,hy+h+1,0) fillp()
 		rectfill(hx-1,hy-4,hx+2,hy+hh,0)
