@@ -49,7 +49,7 @@ function _init()
 		dragfrom={x=0,y=0},
 	}
 	m={
-		x=0,y=0,lb=0,rb=0
+		x=128,y=128,lb=0,rb=0
 	}
 end
 
@@ -79,7 +79,7 @@ function _update60()
 	m.x,m.y,m.lb=stat(32),stat(33),stat(34)
 	
 	-- update handle's hover state
-	handle.hover=(m.x>=handle.hitbox[1] and m.x<=handle.hitbox[2] and m.y>=handle.hitbox[3] and m.y<=handle.hitbox[4]) or handle.drag
+	handle.hover=(m.x>=handle.hitbox[1] and m.x<=handle.hitbox[3] and m.y>=handle.hitbox[2] and m.y<=handle.hitbox[4]) or handle.drag
 
 	-- drag state
 	if (not handle.drag and handle.hover and m.lb==1) then handle.drag=true handle.dragfrom={x=m.x,y=m.y} end
@@ -96,7 +96,7 @@ end
 function _draw()
 	cls(5)
 
-	local x,y,w,h=18,50,92,24 -- gauge pos, size
+	local x,y,w,h=18,40,92,24 -- gauge pos, size
 	rectfill(x,y,x+w,y+h,8) -- bg
 	rectfill(x,y,x+5,y+h,13)	rectfill(x+w-5,y,x+w,y+h,13)
 	fillp(0b0000101000001000.1) rectfill(x+6,y,x+10,y+h,13) rectfill(x+w-10,y,x+w-6,y+h,13) fillp()
@@ -153,7 +153,7 @@ function _draw()
 
 	-- print age
 	do
-		local s,x,y="\^w\^t"..age.current,63-6,30
+		local s,x,y="\^w\^t"..age.current,63-6,y-20
 		print(s,x+1,y,0)
 		print(s,x-1,y,0)
 		print(s,x,y+1,0)
@@ -200,17 +200,26 @@ function _draw()
 		palt(0b0000000000000001)
 		sspr(104-(m.lb==1 and 16 or 0),0,15,7,m.x-5,m.y-2) -- part a (normal-click)
 		sspr(104,7,21,19,m.x-5,m.y-2+7) -- part b
-		palt()
+		
 		-- pset(mx,my,rnd()*10) -- x,y check
 		
-		-- with arm
-		for i=0,13 do
+		-- with arm (line style)
+		--[[ for i=0,13 do
 			local c=(i==0 or i>11) and 0 or (i==1 or i>9) and 2 or 7
 			local x1,y1,x2,y2=m.x+i-2,m.y+17,m.x+i-3+(128-m.y)*0.1,128
 			line(x1,y1,x2,y2,c)
 			if (i>7 and i<10) fillp(0b0101101001011010.1) line(x1,y1,x2,y2,2) fillp()
 			if (i==13) line(x1,y1,x2+1,y2,0) line(x1,y1,x2+2,y2,0)
+		end ]]
+		-- with arm (s style)
+		local x1,y1
+		for i=0,108-m.y do
+			x1=m.x-5+i*(80-m.x)*0.004+cos(i/30-t()*2)*i/40
+			y1=m.y+19+i
+			sspr(104,27+(i%2<1 and 0 or 1),18,1,x1,y1)
+			fillp(0b1010010110100101.1) line(x1+18,y1,x1+18+i*0.08,y1,0) fillp()
 		end
+		palt()
 	end
 
 	
