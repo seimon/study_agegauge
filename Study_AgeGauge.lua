@@ -5,19 +5,20 @@ Age-Gauge Prototyping
 ]]
 
 poke(0x5f5c,12) poke(0x5f5d,3) -- input delay initial&repeating (default 15, 4)
-poke(0x5f2d,1) -- mouse input enable
+poke(0x5f2d,0x1) -- mouse input enable
 
 
 
 
 
 -- sspr + scale9
-function sspr9(sx,sy,sw,sh,dx,dy,dw,dh)
+function sspr9(sx,sy,sw,sh,dx,dy,dw,dh,fill_center)
 	local cw,ch=flr(sw/2),flr(sh/2)
 	sspr(sx,sy,cw,ch,dx,dy,cw,ch) -- lt
 	sspr(sx+cw,sy,1,ch,dx+cw,dy,dw-cw*2,ch) -- ct
 	sspr(sx+cw+1,sy,cw,ch,dx+dw-cw,dy,cw,ch) -- rt
 	sspr(sx,sy+ch,cw,1,dx,dy+ch,cw,dh-ch*2) -- lc
+	if(fill_center) sspr(sx+cw,sy+ch,1,1,dx+cw,dy+ch,dw-cw*2,dh-ch*2) -- cc
 	sspr(sx+cw+1,sy+ch,cw,1,dx+dw-cw,dy+ch,cw,dh-ch*2) -- rc
 	sspr(sx,sy+ch+1,cw,ch,dx,dy+dh-ch,cw,ch) -- lb
 	sspr(sx+cw,sy+ch+1,1,ch,dx+cw,dy+dh-ch,dw-cw*2,ch) -- cb
@@ -48,28 +49,22 @@ function _init()
 		drag=false,
 		dragfrom={x=0,y=0},
 	}
-	m={
-		x=128,y=128,lb=0,rb=0
-	}
+	m={x=128,y=128,lb=0,rb=0}
+	hand={x=128,y=128}
 end
 
 function _update60()
-
-	-- if age_to>=age_min and age_to<=age_max then
-	-- 	if (btn(0)) age_acc=max(-age_acc_max,age_acc-0.025)
-	-- 	if (btn(1)) age_acc=min(age_acc_max,age_acc+0.025)
-	-- end
 
 	-- arrow key
 	if age.intv>0 then
 		age.intv-=1
 	else
-		if (btn(0)) then age.to=max(age.to-1,age.min) age.intv=3 handle.tx=handle.tx_def-5
-		elseif (btn(1)) then age.to=min(age.to+1,age.max) age.intv=3 handle.tx=handle.tx_def+5
+		if (btn(0)) then age.to=max(age.to-1,age.min) age.intv=8 handle.tx=handle.tx_def-5
+		elseif (btn(1)) then age.to=min(age.to+1,age.max) age.intv=8 handle.tx=handle.tx_def+5
 		else handle.tx=handle.tx_def end
 	end
 
-	age.current=mid(flr(age.to+0.5),age.min,age.max)
+	age.current=mid(flr(age.to+.5),age.min,age.max)
 	if age.current!=age.before then
 		sfx(11,-1)
 		age.before=age.current
@@ -84,11 +79,13 @@ function _update60()
 	-- drag state
 	if (not handle.drag and handle.hover and m.lb==1) then handle.drag=true handle.dragfrom={x=m.x,y=m.y} end
 	if handle.drag then
-		if m.lb!=1 then handle.drag=false
+		if m.lb!=1 then -- mouse lb release
+			handle.drag=false
+			age.to=flr(age.to+.5)
 		else
 			local dx=mid(m.x-handle.dragfrom.x,-8,8)
 			handle.tx=handle.tx_def+dx
-			age.to=mid(age.to+dx*0.04,age.min,age.max)
+			age.to=mid(age.to+dx*.04,age.min,age.max)
 		end
 	end
 end
@@ -114,17 +111,17 @@ function _draw()
 	clip(x,y,w+1,h+1)
 	ovalfill(x+4,y+h-2,x+w-4,y+h+14,0)
 	do
-		local cx,w0,h0,gap=x+w/2-0.5,8,16,1
+		local cx,w0,h0,gap=x+w/2-.5,8,16,1
 		age.ratio_to=(age.to-age.min)/(age.max-age.min)
-		age.ratio_spd=(age.ratio_to-age.ratio)*0.05+age.ratio_spd*0.65
+		age.ratio_spd=(age.ratio_to-age.ratio)*.05+age.ratio_spd*.65
 		age.ratio+=age.ratio_spd
-		if (abs(age.ratio_spd)<0.0001) age.ratio=age.ratio_to
+		if (abs(age.ratio_spd)<.0001) age.ratio=age.ratio_to
 
 		for i=0,age.max-age.min do
 			local x0=cx+i*(w0+gap) - age.ratio*(age.max-age.min)*(w0+gap)
 			if x0>x-w0 and x0<x+w+w0 then
 				local dy=(i<7) and (i-7)*2 or 0
-				local oy=y-cos(abs(63-x0)*0.005)*8+10
+				local oy=y-cos(abs(63-x0)*.005)*8+10
 				local dx=abs(cx-x0) -- dist from center
 				-- if (i%10==0) line(x0,oy-1,x0,oy+h0+3,13) -- draw line every 10 step
 				rectfill(x0-3,oy+2-dy,x0+w0-4,oy+h0,dx>37 and 8 or dx>26 and 14 or 6)
@@ -164,10 +161,10 @@ function _draw()
 	
 	-- handle
 	do
-		handle.cx+=(handle.tx-handle.cx)*0.25
-		if (abs(handle.tx-handle.cx)<0.5) handle.cx=handle.tx
+		handle.cx+=(handle.tx-handle.cx)*.25
+		if (abs(handle.tx-handle.cx)<.5) handle.cx=handle.tx
 		
-		local hx,hy,hh=handle.cx,y-2,h+10
+		--[[ local hx,hy,hh=handle.cx,y-2,h+10
 		fillp(0b1010010110100101.1) rectfill(hx+2,hy+1,hx+4,hy+h+1,0) fillp()
 		rectfill(hx-1,hy-4,hx+2,hy+hh,0)
 		rectfill(hx,hy-3,hx+1,hy+hh-1,11)
@@ -181,27 +178,49 @@ function _draw()
 		elseif handle.tx>handle.tx_def then
 			sspr(34,0,4,5,handle.cx+5,hy+hh+5,4,5,true)
 		end
+		palt() ]]
+		local hx,hy,hh=handle.cx,y-2,h+10
+		handle.hitbox={hx-12,hy+hh-2,hx+13,hy+hh+16} -- update hitbox pos
+		
+		-- bottom button part
+		palt(0b0000000000000001)
+		-- sspr(0,0,23,16,hx-10,hy+hh)
+		sspr9(9,16,10,10,hx-10,hy+hh,24,17,true)
+		sspr(9,3,4,9,hx-1,hy+hh+3,4,9)
+		?"<",hx-6,hy+hh+5,handle.tx<handle.tx_def and 7 or 0
+		?">",hx+5,hy+hh+5,handle.tx>handle.tx_def and 7 or 0
+		--[[ if handle.tx<handle.tx_def then
+			sspr(34,0,4,5,handle.cx-7,hy+hh+5)
+		elseif handle.tx>handle.tx_def then
+			sspr(34,0,4,5,handle.cx+5,hy+hh+5,4,5,true)
+		end ]]
 		palt()
-
-		-- update hitbox pos
-		handle.hitbox={hx-11,hy+hh-1,hx+12,hy+hh+15}
-
+		
 		-- outline
 		if handle.hover then
 			local y_=hy+hh-1
-			line(hx-7,y_,hx-2,y_,6)
-			line(hx+3,y_,hx+8,y_,6)
 			palt(0b0000000000000001) sspr9(0,16,9,9,hx-11,y_,24,17) palt()
 		end
+
+		-- line part
+		fillp(0b1010010110100101.1) rectfill(hx+2,hy+1,hx+4,hy+h+1,0) fillp()
+		rect(hx-1,hy-4,hx+2,hy+hh,0)
+		line(hx+1,hy-2,hx+1,hy+hh+1,11)
+		line(hx,hy-2,hx,hy+hh,10)
+		pset(hx,hy-3,7)
+		pset(hx+1,hy-3,10)
+
+		
 	end
 
-	-- mouse cursor
+	-- hand cursor
 	do
+		hand.x+=(m.x-hand.x)*.3
+		hand.y+=(m.y-hand.y)*.3
 		palt(0b0000000000000001)
-		sspr(104-(m.lb==1 and 16 or 0),0,15,7,m.x-5,m.y-2) -- part a (normal-click)
-		sspr(104,7,21,19,m.x-5,m.y-2+7) -- part b
-		
-		-- pset(mx,my,rnd()*10) -- x,y check
+		sspr(104-(m.lb==1 and 16 or 0),0,15,7,hand.x-5,hand.y-2) -- part a (normal-click)
+		sspr(104,7,21,19,hand.x-5,hand.y-2+7) -- part b
+		-- pset(m.x,m.y,rnd()*10) -- x,y check
 		
 		-- with arm (line style)
 		--[[ for i=0,13 do
@@ -213,11 +232,12 @@ function _draw()
 		end ]]
 		-- with arm (s style)
 		local x1,y1
-		for i=0,108-m.y do
-			x1=m.x-5+i*(80-m.x)*0.004+cos(i/30-t()*2)*i/40
-			y1=m.y+19+i
+		for i=0,109-hand.y do
+			-- x1=hand.x-5+i*(80-hand.x)*0.004+cos(i/30-t()*2)*i/40
+			x1=hand.x-5+i*(150-hand.x)*.002+cos(i/40-t()*3)*i/40
+			y1=hand.y+19+i
 			sspr(104,27+(i%2<1 and 0 or 1),18,1,x1,y1)
-			fillp(0b1010010110100101.1) line(x1+18,y1,x1+18+i*0.08,y1,0) fillp()
+			fillp(0b1010010110100101.1) line(x1+17,y1,x1+17+i*.06,y1,0) fillp()
 		end
 		palt()
 	end
