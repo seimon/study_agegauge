@@ -4,7 +4,7 @@ Age Wheel Prototyping
 
 ]]
 
-ver="0.8"
+ver="0.81"
 poke(0x5f5c,12) poke(0x5f5d,3) -- input delay initial&repeating (default 15, 4)
 poke(0x5f2d,0x1) -- mouse input enable
 
@@ -106,7 +106,7 @@ function _draw()
 	printa("age wheel prototyping v"..ver,2,2,7,0,true)
 
 	-- local x,y,w,h=18,40,92,24 -- gauge pos, size
-	local x,y,w,h=18,40,92,26 -- gauge pos, size
+	local x,y,w,h=18,40,92,27 -- gauge pos, size
 	rectfill(x,y,x+w,y+h,8) -- bg
 	rectfill(x,y,x+5,y+h,13)	rectfill(x+w-5,y,x+w,y+h,13)
 	fillp(0b0000101000001000.1) rectfill(x+6,y,x+10,y+h,13) rectfill(x+w-10,y,x+w-6,y+h,13) fillp()
@@ -120,7 +120,7 @@ function _draw()
 	-- clip(x,y,w+1,10)
 	-- for i=0,6 do oval(x-8,y+0-i,x+w+8,y+26-i,0) end
 	clip(x,y,w+1,10)
-	for i=0,7 do oval(x-8,y+2-i,x+w+8,y+26-i,0) end
+	for i=0,7 do oval(x-8,y+2-i,x+w+8,y+30-i,0) end
 
 	-- inside bottom oval over + gradations + glass eff
 	clip(x,y,w+1,h+1)
@@ -137,7 +137,7 @@ function _draw()
 			local x0=cx+i*(w0+gap) - age.ratio*(age.max-age.min)*(w0+gap)
 			if x0>x-w0 and x0<x+w+w0 then
 				local dy=(i<7) and (i-7)*2 or 0
-				local oy=y-cos(abs(63-x0)*.005)*8+11
+				local oy=y-cos(abs(63-x0)*.005)*8+12
 				local dx=abs(cx-x0) -- dist from center
 				-- if (i%10==0) line(x0,oy-1,x0,oy+h0+3,13) -- draw line every 10 step
 				rectfill(x0-3,oy+2-dy,x0+w0-4,oy+h0,dx>37 and 8 or dx>26 and 14 or 6)
