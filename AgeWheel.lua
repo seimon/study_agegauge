@@ -4,7 +4,7 @@ Age Wheel Prototyping
 
 ]]
 
-ver="0.81"
+ver="0.82"
 poke(0x5f5c,12) poke(0x5f5d,3) -- input delay initial&repeating (default 15, 4)
 poke(0x5f2d,0x1) -- mouse input enable
 
@@ -66,8 +66,8 @@ function _update60()
 	if age.intv>0 then
 		age.intv-=1
 	else
-		if (btn(0)) then age.to=max(age.to-1,age.min) age.intv=8 handle.tx=handle.tx_def-5
-		elseif (btn(1)) then age.to=min(age.to+1,age.max) age.intv=8 handle.tx=handle.tx_def+5
+		if (btn(0)) then age.to=max(age.to-1,age.min) age.intv=8 handle.tx=handle.tx_def-3
+		elseif (btn(1)) then age.to=min(age.to+1,age.max) age.intv=8 handle.tx=handle.tx_def+3
 		else handle.tx=handle.tx_def end
 	end
 
@@ -90,9 +90,6 @@ function _update60()
 			handle.drag=false
 			age.to=flr(age.to+.5)
 		else
-			--[[ local dx=mid(m.x-handle.dragfrom.x,-10,10)
-			handle.tx=handle.tx_def+dx
-			age.to=mid(age.to+dx*.025,age.min,age.max) ]]
 			local dx=mid(m.x-handle.dragfrom.x,-35,35)
 			handle.tx=handle.tx_def+abs(dx)^.6*(dx<0 and -1 or 1) -- 멀리 당길수록 덜 따라오게(고무줄 느낌?)
 			age.to=mid(age.to+dx*.007,age.min,age.max)
@@ -103,7 +100,8 @@ end
 function _draw()
 	cls(5)
 
-	printa("age wheel prototyping v"..ver,2,2,7,0,true)
+	printa("age wheel prototyping"..ver,2,2,7,0,true)
+	printa("v"..ver,2,9,7,0,true)
 
 	-- local x,y,w,h=18,40,92,24 -- gauge pos, size
 	local x,y,w,h=18,40,92,27 -- gauge pos, size
@@ -123,8 +121,8 @@ function _draw()
 	for i=0,7 do oval(x-8,y+2-i,x+w+8,y+30-i,0) end
 
 	-- inside bottom oval over + gradations + glass eff
-	clip(x,y,w+1,h+1)
-	-- ovalfill(x+4,y+h-2,x+w-4,y+h+14,0)
+	-- clip(x,y,w+1,h+1)
+	clip(x+1,y,w-1,h+1)
 	ovalfill(x+4,y+h-3,x+w-4,y+h+14,0)
 	do
 		local cx,w0,h0,gap=x+w/2-.5,8,16,1
@@ -144,6 +142,7 @@ function _draw()
 				if (dx>12 and dx<26) fillp(0b0101101001011010.1) rectfill(x0-3,oy+2-dy,x0+w0-4,oy+h0,14) fillp()
 			end
 		end
+		clip()
 
 		-- side shadow
 		fillp(0b0101101001011010.1)
@@ -161,13 +160,17 @@ function _draw()
 		for i=0,4 do line(x+w-8+i,y,x+w-18+i,y+h,7) end
 		fillp()
 		-- glass highlight
-		line(x+1,y,x+w-1,y,7)
+		--[[ line(x+1,y,x+w-1,y,7)
 		line(x,y+1,x,y+h-1,7)
 		line(x+1,y+h,x+w-1,y+h,4)
-		line(x+w,y+1,x+w,y+h-1,4)
+		line(x+w,y+1,x+w,y+h-1,4) ]]
+		line(x+1,y,x+24,y,7) line(x+28,y,x+36,y,7)
+		line(x,y+1,x,y+7,7) line(x,y+11,x,y+14,7)
+		line(x+w-16,y+h,x+w-1,y+h,4) line(x+w-28,y+h,x+w-22,y+h,4)
+		line(x+w,y+h-12,x+w,y+h-1,4)
 
 	end
-	clip()
+	
 
 	-- print age
 	do
@@ -230,9 +233,14 @@ function _draw()
 		line(hx,hy-2,hx,hy+hh+1,10)
 		pset(hx,hy-3,7)
 		pset(hx+1,hy-3,10)
-
-		
 	end
+
+	-- side buttons
+	--[[ do
+		palt(0b0000000000000001)
+		sspr9(0,32,15,17,x-4,y+h+8,21,18,true)
+		palt()
+	end ]]
 
 	-- hand cursor
 	do
@@ -266,9 +274,7 @@ function _draw()
 
 
 	-- test	print
-	-- printa("age gauge prototyping",2,2,7,0,true)
-	
-	
+	-- printa((stat(30)==true and "t" or "f")..","..stat(32)..","..stat(33)..","..stat(34)..","..stat(31),2,10,7,0,true)
 	--[[ if handle.drag then
 		if m.lb!=1 then handle.drag=false
 		else
