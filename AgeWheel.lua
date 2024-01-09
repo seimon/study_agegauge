@@ -4,7 +4,7 @@ Age Wheel Prototyping
 
 ]]
 
-ver="0.82"
+ver="0.9"
 poke(0x5f5c,12) poke(0x5f5d,3) -- input delay initial&repeating (default 15, 4)
 poke(0x5f2d,0x1) -- mouse input enable
 
@@ -100,7 +100,7 @@ end
 function _draw()
 	cls(5)
 
-	printa("age wheel prototyping"..ver,2,2,7,0,true)
+	printa("age wheel prototyping",2,2,7,0,true)
 	printa("v"..ver,2,9,7,0,true)
 
 	-- local x,y,w,h=18,40,92,24 -- gauge pos, size
